@@ -1,0 +1,7 @@
+{
+  "name": "Dark's Nav",
+  "description": "A clean, aesthetic navigation dashboard with customizable sidebar and widgets. Includes admin mode for editing links.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

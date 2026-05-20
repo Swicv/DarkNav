@@ -1,0 +1,13 @@
+services:
+  darks-nav:
+    build: .
+    container_name: darks-nav
+    environment:
+      # Set this in your shell or a .env file before first startup.
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-666333}
+    ports:
+      - "9910:3000"
+    volumes:
+      # Map host data.json to container data.json for persistence
+      - ./data.json:/app/data.json
+    restart: always

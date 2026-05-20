@@ -1,0 +1,9 @@
+node_modules
+dist
+.uploads
+.git
+.env
+*.log
+data.json
+data.json.bak
+data.json.tmp
