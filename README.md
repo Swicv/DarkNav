@@ -61,12 +61,97 @@ npm start
 npm run build
 ```
 
-## Docker 部署
+## Docker 部署：直接拉取镜像
 
 服务器需要提前安装：
 
 - Docker
 - Docker Compose
+
+已发布镜像：
+
+```text
+darkver8/nav:latest
+```
+
+镜像摘要：
+
+```text
+darkver8/nav@sha256:ea0b8979fe6833b57d31d89c384febd00dd61feca2ea54a207d0e630a188bfff
+```
+
+### 方式一：docker run
+
+创建部署目录和数据文件：
+
+```bash
+mkdir -p /opt/darks-nav
+cd /opt/darks-nav
+echo '{ "categories": [] }' > data.json
+```
+
+启动容器：
+
+```bash
+docker run -d \
+  --name darks-nav \
+  --restart always \
+  -p 9910:3000 \
+  -e ADMIN_PASSWORD=你的强密码 \
+  -v /opt/darks-nav/data.json:/app/data.json \
+  darkver8/nav:latest
+```
+
+访问地址：
+
+```text
+http://服务器IP:9910
+```
+
+### 方式二：docker compose
+
+在 `/opt/darks-nav/docker-compose.yml` 写入：
+
+```yaml
+services:
+  darks-nav:
+    image: darkver8/nav:latest
+    container_name: darks-nav
+    environment:
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-666333}
+    ports:
+      - "9910:3000"
+    volumes:
+      - ./data.json:/app/data.json
+    restart: always
+```
+
+创建 `.env` 和 `data.json`：
+
+```bash
+cd /opt/darks-nav
+echo "ADMIN_PASSWORD=你的强密码" > .env
+echo '{ "categories": [] }' > data.json
+```
+
+启动：
+
+```bash
+docker compose up -d
+```
+
+更新镜像：
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+注意：如果 `data.json` 中已经保存了密码哈希，后续修改 `.env` 里的 `ADMIN_PASSWORD` 不会覆盖现有后台密码。请登录页面后通过“修改后台密码”修改。
+
+## Docker 部署：源码构建
+
+如果你要自己从源码构建镜像，可以使用仓库里的 `Dockerfile` 和 `docker-compose.yml`。
 
 当前 Dockerfile 使用 `docker.1ms.run/node:20-alpine` 作为 Node 镜像源，适合 Docker Hub 访问不稳定的环境。
 
@@ -118,7 +203,7 @@ docker compose up -d --build
 http://服务器IP:9910
 ```
 
-## 更新部署
+## 源码更新部署
 
 更新代码时，建议先备份 `data.json`：
 
