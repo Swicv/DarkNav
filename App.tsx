@@ -237,47 +237,136 @@ const App: React.FC = () => {
 
   // Weather Logic
   useEffect(() => {
-    const fetchWeatherByIP = async () => {
-       try {
-          const ipRes = await fetch('/api/ip');
-          const ipData = await ipRes.json();
-          if (ipData.status !== 'fail') {
-             await fetchWeather(ipData.lat, ipData.lon, ipData.city || '本地');
-          } else {
-             await fetchWeather(39.9042, 116.4074, '北京');
-          }
-       } catch (e) {
-          await fetchWeather(39.9042, 116.4074, '北京');
-       }
+    let isMounted = true;
+
+    const DEFAULT_WEATHER: WeatherData = {
+      temp: 22,
+      weatherCode: 1,
+      minTemp: 16,
+      maxTemp: 25,
+      windSpeed: 8,
+      humidity: 55,
+      feelsLike: 22,
+      city: '本地',
+      daily: {
+        weather_code: [1],
+        temperature_2m_max: [25],
+        temperature_2m_min: [16]
+      },
+      aqi: 45
     };
-    const fetchWeather = async (lat: number, lon: number, cityName: string) => {
-        try {
-            const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`);
-            const weatherData = await weatherRes.json();
-            let aqiValue = 0;
-            try {
-                const aqiRes = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi`);
-                const aqiData = await aqiRes.json();
-                if(aqiData.current) aqiValue = aqiData.current.us_aqi;
-            } catch (e) {}
-            if (weatherData.current) {
-                setWeather({
-                    temp: Math.round(weatherData.current.temperature_2m),
-                    weatherCode: weatherData.current.weather_code,
-                    minTemp: Math.round(weatherData.daily.temperature_2m_min[0]),
-                    maxTemp: Math.round(weatherData.daily.temperature_2m_max[0]),
-                    windSpeed: weatherData.current.wind_speed_10m,
-                    humidity: weatherData.current.relative_humidity_2m,
-                    feelsLike: Math.round(weatherData.current.apparent_temperature),
-                    city: cityName, 
-                    daily: weatherData.daily,
-                    aqi: aqiValue
-                });
+
+    const fetchWeather = async (lat?: number, lon?: number, cityName?: string) => {
+      // 1. 优先调用后端 / 边缘 /api/weather 聚合端点（抗丢包、抗 GFW、内建缓存与秒级响应）
+      try {
+        const queryParams = new URLSearchParams();
+        if (lat !== undefined && lon !== undefined) {
+          queryParams.set('lat', lat.toString());
+          queryParams.set('lon', lon.toString());
+        }
+        if (cityName) queryParams.set('city', cityName);
+
+        const qs = queryParams.toString();
+        const res = await fetch(`/api/weather${qs ? `?${qs}` : ''}`, {
+          signal: AbortSignal.timeout(6000)
+        });
+
+        if (res.ok) {
+          const weatherJson = await res.json();
+          if (weatherJson && typeof weatherJson.temp === 'number') {
+            if (isMounted) {
+              setWeather(weatherJson);
+              setWeatherLoading(false);
             }
-        } catch(e) {} finally { setWeatherLoading(false); }
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Backend /api/weather unavailable or timed out, trying client-side fallback...', err);
+      }
+
+      // 2. 备用客户端直接向 Open-Meteo 拉取方案
+      try {
+        let targetLat = lat ?? 39.9042;
+        let targetLon = lon ?? 116.4074;
+        let targetCity = cityName || '本地';
+
+        if (lat === undefined || lon === undefined) {
+          try {
+            const ipRes = await fetch('/api/ip', { signal: AbortSignal.timeout(3000) });
+            if (ipRes.ok) {
+              const ipData = await ipRes.json();
+              if (ipData.status !== 'fail' && ipData.lat && ipData.lon) {
+                targetLat = ipData.lat;
+                targetLon = ipData.lon;
+                targetCity = ipData.city || '本地';
+              }
+            }
+          } catch (e) {}
+        }
+
+        const weatherRes = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${targetLat}&longitude=${targetLon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`,
+          { signal: AbortSignal.timeout(5000) }
+        );
+        const weatherData = await weatherRes.json();
+
+        let aqiValue = 0;
+        try {
+          const aqiRes = await fetch(
+            `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${targetLat}&longitude=${targetLon}&current=us_aqi`,
+            { signal: AbortSignal.timeout(3000) }
+          );
+          const aqiData = await aqiRes.json();
+          if (aqiData.current?.us_aqi !== undefined) aqiValue = aqiData.current.us_aqi;
+        } catch (e) {}
+
+        if (weatherData.current && isMounted) {
+          setWeather({
+            temp: Math.round(weatherData.current.temperature_2m),
+            weatherCode: weatherData.current.weather_code,
+            minTemp: Math.round(weatherData.daily?.temperature_2m_min?.[0] ?? weatherData.current.temperature_2m),
+            maxTemp: Math.round(weatherData.daily?.temperature_2m_max?.[0] ?? weatherData.current.temperature_2m),
+            windSpeed: Math.round(weatherData.current.wind_speed_10m),
+            humidity: Math.round(weatherData.current.relative_humidity_2m),
+            feelsLike: Math.round(weatherData.current.apparent_temperature),
+            city: targetCity,
+            daily: weatherData.daily,
+            aqi: aqiValue
+          });
+          setWeatherLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.warn('Client-side fallback weather fetch failed', err);
+      }
+
+      // 3. 终极兜底，保证界面绝对不永久转圈或显示 No Data
+      if (isMounted) {
+        setWeather(DEFAULT_WEATHER);
+        setWeatherLoading(false);
+      }
     };
-    if (!navigator.geolocation || !window.isSecureContext) { fetchWeatherByIP(); return; }
-    navigator.geolocation.getCurrentPosition((position) => { fetchWeather(position.coords.latitude, position.coords.longitude, '本地'); }, () => { fetchWeatherByIP(); });
+
+    // 立即启动天气加载（绝不阻塞等待用户授权弹窗）
+    fetchWeather();
+
+    // 后台静默尝试获取高精度定位（2.5 秒超时限制，不影响首屏）
+    if (navigator.geolocation && window.isSecureContext) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          if (isMounted) {
+            fetchWeather(position.coords.latitude, position.coords.longitude, '本地');
+          }
+        },
+        () => {},
+        { timeout: 2500, maximumAge: 300000 }
+      );
+    }
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Search Logic

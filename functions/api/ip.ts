@@ -8,8 +8,48 @@ export const onRequestOptions = async ({ env }: { env: Env }) => {
 };
 
 export const onRequestGet = async ({ request, env }: { request: Request; env: Env }) => {
-  // 1. 优先使用 Cloudflare Edge 自带的高精度地理位置，0ms 延迟且不消耗外部配额
   const cf = (request as any).cf;
+  const clientIp = request.headers.get('cf-connecting-ip') || 
+                   request.headers.get('x-forwarded-for')?.split(',')[0].trim() || '';
+
+  // 1. 如果有真实公网 IP，优先请求高可靠的 HTTPS 地名接口（输出中文地名）
+  if (clientIp && !clientIp.startsWith('127.') && !clientIp.startsWith('192.168.') && !clientIp.startsWith('10.')) {
+    try {
+      const response = await fetch(`https://ipwho.is/${clientIp}?lang=zh-CN`, {
+        signal: AbortSignal.timeout(3000)
+      });
+      if (response.ok) {
+        const data: any = await response.json();
+        if (data.success && data.latitude && data.longitude) {
+          return jsonResponse({
+            status: 'success',
+            city: data.city || data.region || '本地',
+            lat: parseFloat(data.latitude),
+            lon: parseFloat(data.longitude)
+          }, 200, env);
+        }
+      }
+    } catch (e) {}
+
+    try {
+      const response = await fetch(`http://ip-api.com/json/${clientIp}?lang=zh-CN`, {
+        signal: AbortSignal.timeout(3000)
+      });
+      if (response.ok) {
+        const data: any = await response.json();
+        if (data.status !== 'fail') {
+          return jsonResponse({
+            status: 'success',
+            city: data.city || data.regionName || '本地',
+            lat: data.lat,
+            lon: data.lon
+          }, 200, env);
+        }
+      }
+    } catch (e) {}
+  }
+
+  // 2. 降级使用 Cloudflare 原生地理位置标头
   if (cf && cf.latitude && cf.longitude) {
     return jsonResponse({
       status: 'success',
@@ -17,19 +57,6 @@ export const onRequestGet = async ({ request, env }: { request: Request; env: En
       lat: parseFloat(cf.latitude),
       lon: parseFloat(cf.longitude)
     }, 200, env);
-  }
-
-  // 2. 本地调试或未携带 CF 标头时，降级请求外部 IP 接口
-  try {
-    const response = await fetch('http://ip-api.com/json/?lang=zh-CN', {
-      signal: AbortSignal.timeout(3000)
-    });
-    if (response.ok) {
-      const data = await response.json();
-      return jsonResponse(data, 200, env);
-    }
-  } catch (error) {
-    console.error('IP proxy fallback failed:', error);
   }
 
   // 3. 终极兜底默认坐标（北京）

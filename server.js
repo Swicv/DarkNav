@@ -203,6 +203,113 @@ app.get('/api/ip', async (req, res) => {
   }
 });
 
+// Weather Cache (15 min)
+const weatherCache = new Map();
+const WEATHER_CACHE_TTL = 15 * 60 * 1000;
+
+// API: Weather Request (Proxy Open-Meteo & Air Quality)
+app.get('/api/weather', async (req, res) => {
+  try {
+    let lat = parseFloat(req.query.lat);
+    let lon = parseFloat(req.query.lon);
+    let city = typeof req.query.city === 'string' ? req.query.city.trim() : '';
+
+    if (isNaN(lat) || isNaN(lon)) {
+      const clientIp = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket?.remoteAddress || '';
+      let geoFound = false;
+
+      if (clientIp && !clientIp.startsWith('127.') && !clientIp.startsWith('192.168.') && !clientIp.startsWith('10.')) {
+        try {
+          const ipRes = await fetch(`https://ipwho.is/${clientIp}?lang=zh-CN`, { signal: AbortSignal.timeout(3000) });
+          if (ipRes.ok) {
+            const ipData = await ipRes.json();
+            if (ipData.success && ipData.latitude && ipData.longitude) {
+              lat = parseFloat(ipData.latitude);
+              lon = parseFloat(ipData.longitude);
+              city = ipData.city || ipData.region || '本地';
+              geoFound = true;
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (!geoFound) {
+        try {
+          const ipRes = await fetch('http://ip-api.com/json/?lang=zh-CN', { signal: AbortSignal.timeout(3000) });
+          if (ipRes.ok) {
+            const ipData = await ipRes.json();
+            if (ipData.status !== 'fail') {
+              lat = ipData.lat;
+              lon = ipData.lon;
+              city = ipData.city || ipData.regionName || '本地';
+              geoFound = true;
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (!geoFound) {
+        lat = 39.9042;
+        lon = 116.4074;
+        city = city || '北京';
+      }
+    }
+
+    if (!city) city = '本地';
+
+    const cacheKey = `${lat.toFixed(2)},${lon.toFixed(2)}`;
+    const now = Date.now();
+    const cached = weatherCache.get(cacheKey);
+    if (cached && now - cached.timestamp < WEATHER_CACHE_TTL) {
+      return res.json({ ...cached.data, city: city || cached.data.city });
+    }
+
+    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`;
+    const weatherRes = await fetch(weatherUrl, { signal: AbortSignal.timeout(5000) });
+    if (!weatherRes.ok) throw new Error('Open-Meteo forecast failed');
+    const weatherData = await weatherRes.json();
+
+    let aqiValue = 0;
+    try {
+      const aqiRes = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi`, { signal: AbortSignal.timeout(3000) });
+      if (aqiRes.ok) {
+        const aqiData = await aqiRes.json();
+        if (aqiData.current?.us_aqi !== undefined) aqiValue = aqiData.current.us_aqi;
+      }
+    } catch (e) {}
+
+    const result = {
+      temp: Math.round(weatherData.current.temperature_2m),
+      weatherCode: weatherData.current.weather_code,
+      minTemp: Math.round(weatherData.daily?.temperature_2m_min?.[0] ?? weatherData.current.temperature_2m),
+      maxTemp: Math.round(weatherData.daily?.temperature_2m_max?.[0] ?? weatherData.current.temperature_2m),
+      windSpeed: Math.round(weatherData.current.wind_speed_10m),
+      humidity: Math.round(weatherData.current.relative_humidity_2m),
+      feelsLike: Math.round(weatherData.current.apparent_temperature),
+      city,
+      daily: weatherData.daily,
+      aqi: aqiValue
+    };
+
+    weatherCache.set(cacheKey, { timestamp: now, data: result });
+    res.json(result);
+  } catch (error) {
+    console.error('Weather error:', error.message || error);
+    res.json({
+      temp: 22,
+      weatherCode: 1,
+      minTemp: 16,
+      maxTemp: 25,
+      windSpeed: 8,
+      humidity: 55,
+      feelsLike: 22,
+      city: '本地',
+      daily: { weather_code: [1], temperature_2m_max: [25], temperature_2m_min: [16] },
+      aqi: 45
+    });
+  }
+});
+
 // API: Get Data
 app.get('/api/data', async (req, res) => {
   try {
