@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # 安装所有依赖（包括 devDependencies 用于构建）
-RUN npm ci
+RUN npm install
 
 # 复制源代码
 COPY . .
@@ -24,7 +24,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # 只安装生产环境依赖 (express, cors 等)
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 # 从构建阶段复制构建好的前端文件
 COPY --from=builder /app/dist ./dist

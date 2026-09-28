@@ -37,14 +37,14 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onLogin }) => 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm m-4 animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm m-4 border border-slate-100 dark:border-slate-700 animate-in fade-in zoom-in duration-200">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
             <Lock className="w-4 h-4 text-blue-500" />
             管理员登录
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-200 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -59,10 +59,10 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onLogin }) => 
                 setPassword(e.target.value);
                 setError(false);
               }}
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500"
               autoFocus
             />
-            {error && <p className="text-red-500 text-xs mt-2 ml-1">密码错误</p>}
+            {error && <p className="text-red-500 dark:text-red-400 text-xs mt-2 ml-1">密码错误</p>}
           </div>
           <button
             type="submit"

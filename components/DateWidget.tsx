@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { getLunarDateString } from '../utils/lunar';
 
 const DateWidget: React.FC = () => {
   const [date, setDate] = useState(new Date());
@@ -15,7 +16,7 @@ const DateWidget: React.FC = () => {
 
   // Format time as HH:MM:SS
   const timeString = date.toLocaleTimeString('en-GB', { hour12: false });
-  const lunarText = "十月初六"; // Placeholder
+  const lunarText = getLunarDateString(date);
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-2xl p-3 lg:p-4 flex gap-3 lg:gap-4 items-center shadow-sm border border-slate-100 dark:border-slate-700 h-full w-full transition-colors relative overflow-hidden">

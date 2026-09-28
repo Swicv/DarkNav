@@ -166,17 +166,39 @@ function verifyPassword(providedPassword, storedPassword) {
     return providedPassword === storedPassword;
 }
 
+// In-memory cache for IP responses (15 minutes TTL)
+const ipCache = new Map();
+const IP_CACHE_TTL = 15 * 60 * 1000;
+
 // API: Proxy IP Request
 app.get('/api/ip', async (req, res) => {
+  const clientIp = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket?.remoteAddress || 'default';
+  const now = Date.now();
+  const cached = ipCache.get(clientIp);
+
+  if (cached && now - cached.timestamp < IP_CACHE_TTL) {
+    return res.json(cached.data);
+  }
+
   try {
     const response = await fetch('http://ip-api.com/json/?lang=zh-CN', {
       signal: AbortSignal.timeout(3000)
     });
     if (!response.ok) throw new Error('IP API failed');
     const data = await response.json();
+    ipCache.set(clientIp, { timestamp: now, data });
+    // 清理过期缓存
+    if (ipCache.size > 200) {
+      for (const [key, val] of ipCache.entries()) {
+        if (now - val.timestamp > IP_CACHE_TTL) ipCache.delete(key);
+      }
+    }
     res.json(data);
   } catch (error) {
-    console.error('IP Proxy error:', error);
+    console.error('IP Proxy error:', error.message || error);
+    if (cached) {
+      return res.json(cached.data);
+    }
     res.status(500).json({ status: 'fail', message: 'Server failed to fetch IP' });
   }
 });
@@ -270,8 +292,15 @@ app.post('/api/data', async (req, res) => {
   }
 });
 
-// Serve Static Files
-app.use(express.static(path.join(__dirname, 'dist')));
+// Serve Static Files with proper caching
+app.use(express.static(path.join(__dirname, 'dist'), {
+  maxAge: '1d',
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+  }
+}));
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));

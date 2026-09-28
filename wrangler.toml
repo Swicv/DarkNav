@@ -1,0 +1,13 @@
+name = "cosmos-nav"
+compatibility_date = "2024-09-01"
+pages_build_output_dir = "dist"
+
+# Cloudflare Pages KV 命名空间绑定配置
+# 在 Cloudflare Pages 后台 Settings -> Functions -> KV namespace bindings 中添加：
+# Variable name: NAV_KV
+# KV namespace: 选择你创建的 KV 命名空间 (如 cosmos-nav-kv)
+#
+# 如果使用 wrangler 本地预览 (npx wrangler pages dev dist)，可以取消下方注释并填入 KV ID：
+# [[kv_namespaces]]
+# binding = "NAV_KV"
+# id = "<YOUR_KV_NAMESPACE_ID>"

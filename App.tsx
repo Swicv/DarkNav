@@ -295,7 +295,7 @@ const App: React.FC = () => {
       
       // 确保有搜索关键词并且引擎URL有效
       if (searchQuery.trim() && engines[searchEngine]) {
-          window.location.href = `${engines[searchEngine]}${encodeURIComponent(searchQuery)}`;
+          window.open(`${engines[searchEngine]}${encodeURIComponent(searchQuery)}`, '_blank');
       }
   };
 
@@ -439,7 +439,7 @@ const App: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `darknav-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `cosmonav-backup-${new Date().toISOString().slice(0, 10)}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -457,7 +457,7 @@ const App: React.FC = () => {
           <div className="p-6 mb-2 shrink-0 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-slate-900 dark:bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-md"><Compass className="w-6 h-6" /></div>
-              <div><h1 className="font-bold text-lg leading-tight text-slate-900 dark:text-white">Dark's Nav</h1><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-widest uppercase">Dashboard</p></div>
+              <div><h1 className="font-bold text-lg leading-tight text-slate-900 dark:text-white">Cosmo's Nav</h1><p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-widest uppercase">Dashboard</p></div>
             </div>
             <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"><X className="w-6 h-6" /></button>
           </div>
@@ -512,7 +512,7 @@ const App: React.FC = () => {
       <div className="flex-1 flex flex-col h-screen min-w-0 bg-[#f8fafc] dark:bg-[#0b1120] overflow-x-hidden">
         <header className="lg:hidden h-16 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between px-4 shrink-0 z-30 transition-colors duration-300">
             <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition-colors"><Menu className="w-6 h-6" /></button>
-            <h1 className="font-bold text-lg leading-tight text-slate-900 dark:text-white">Dark's Nav</h1>
+            <h1 className="font-bold text-lg leading-tight text-slate-900 dark:text-white">Cosmo's Nav</h1>
             <div className="w-10"></div>
         </header>
 
@@ -586,7 +586,7 @@ const App: React.FC = () => {
           
           {/* 版权信息 */}
           <div className="py-4 mt-10 text-center text-sm text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800">
-            © 2025 Dark's Nav
+            © 2025-2026 Cosmo's Nav
           </div>
         </main>
       </div>

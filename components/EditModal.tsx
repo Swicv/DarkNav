@@ -70,45 +70,45 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, onSave, onDelete
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md m-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 w-full max-w-md m-4 border border-slate-100 dark:border-slate-700 animate-in fade-in zoom-in duration-200">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-bold text-slate-800">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white">
             {initialData ? '编辑链接' : '添加链接'}
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-200 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1 ml-1">标题</label>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 ml-1">标题</label>
             <input
               required
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({...formData, title: e.target.value})}
-              className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 dark:text-slate-200"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1 ml-1">URL</label>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 ml-1">URL</label>
             <input
               required
               type="url"
               value={formData.url}
               onChange={(e) => setFormData({...formData, url: e.target.value})}
-              className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 dark:text-slate-200"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1 ml-1">图标 URL (可选)</label>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 ml-1">图标 URL (可选)</label>
             <input
               type="text"
               value={formData.icon || ''}
               onChange={(e) => setFormData({...formData, icon: e.target.value})}
-              className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500"
               placeholder="留空自动获取 Favicon"
             />
           </div>
@@ -123,14 +123,14 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, onSave, onDelete
                        onClose();
                    }
                }}
-               className="flex-none bg-red-50 text-red-600 px-4 rounded-xl hover:bg-red-100 transition-colors flex items-center justify-center"
+               className="flex-none bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-4 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors flex items-center justify-center"
              >
                <Trash2 className="w-5 h-5" />
              </button>
             )}
             <button
               type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-xl transition-colors"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl transition-colors shadow-lg shadow-blue-500/30"
             >
               保存
             </button>

@@ -1,7 +1,7 @@
 services:
-  darks-nav:
+  cosmos-nav:
     build: .
-    container_name: darks-nav
+    container_name: cosmos-nav
     environment:
       # Set this in your shell or a .env file before first startup.
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-666333}
