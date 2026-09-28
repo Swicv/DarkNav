@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 
 export interface Env {
-  NAV_KV?: KVNamespace;
+  NAV_KV?: any;
   ADMIN_PASSWORD?: string;
   CORS_ORIGIN?: string;
 }

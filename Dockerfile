@@ -1,5 +1,5 @@
 # 阶段 1: 构建前端
-FROM docker.1ms.run/node:20-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ COPY . .
 RUN npm run build
 
 # 阶段 2: 运行环境
-FROM docker.1ms.run/node:20-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
