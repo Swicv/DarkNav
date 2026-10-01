@@ -827,7 +827,7 @@ const App: React.FC = () => {
           </div>
 
           {/* Search Bar */}
-          <div className="mb-6 lg:mb-8">
+          <div className="mb-6 lg:mb-8 relative z-30">
             <SearchBar 
               engine={searchEngine} 
               onEngineChange={setSearchEngine} 

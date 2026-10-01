@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, ChevronDown, ArrowRight, Monitor, Globe, X, CornerDownLeft } from 'lucide-react';
+import { Search, ChevronDown, ArrowRight, Monitor, Globe, X } from 'lucide-react';
 import { SearchEngine } from '../types';
 
 interface SearchBarProps {
@@ -11,9 +11,9 @@ interface SearchBarProps {
 }
 
 const ENGINES = [
-  { id: 'local' as const, name: '本地', icon: Monitor, placeholder: '搜索已收藏书签或类别 (快捷键 / 或 ⌘K)...' },
-  { id: 'google' as const, name: 'Google', icon: Globe, placeholder: 'Google 全球智搜...' },
-  { id: 'bing' as const, name: 'Bing', icon: Search, placeholder: 'Bing 微软智搜...' },
+  { id: 'local' as const, name: '本地', icon: Monitor, placeholder: '搜索本地书签 (快捷键 / 或 ⌘K)...' },
+  { id: 'google' as const, name: 'Google', icon: Globe, placeholder: 'Google 全球搜索...' },
+  { id: 'bing' as const, name: 'Bing', icon: Search, placeholder: 'Bing 微软搜索...' },
   { id: 'baidu' as const, name: '百度', icon: Search, placeholder: '百度一下，你就知道...' },
 ];
 
@@ -57,7 +57,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Escape') {
-      if (query) {
+      if (isDropdownOpen) {
+        setIsDropdownOpen(false);
+      } else if (query) {
         onQueryChange('');
       } else {
         inputRef.current?.blur();
@@ -66,16 +68,16 @@ const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto my-5 sm:my-7 transition-all duration-300">
+    <div className={`w-full max-w-3xl mx-auto my-5 sm:my-7 relative transition-all duration-300 ${isDropdownOpen ? 'z-50' : 'z-30'}`}>
       {/* Outer Glow Wrapper */}
       <div
         className={`relative rounded-3xl p-[1px] transition-all duration-500 ${
           isFocused || isDropdownOpen
-            ? 'bg-gradient-to-r from-blue-500 via-cyan-400 to-indigo-500 shadow-lg shadow-blue-500/20'
+            ? 'bg-gradient-to-r from-blue-500 via-cyan-400 to-indigo-500 shadow-xl shadow-blue-500/20'
             : 'bg-gradient-to-r from-slate-200/80 via-slate-100/50 to-slate-200/80 dark:from-white/10 dark:via-white/5 dark:to-white/10'
         }`}
       >
-        <div className="glass-panel rounded-[23px] shadow-sm dark:shadow-glass-dark">
+        <div className="relative glass-panel bg-white/90 dark:bg-cosmos-900/90 rounded-[23px] shadow-sm dark:shadow-glass-dark">
           <form onSubmit={handleSubmit} className="flex items-center w-full px-2 py-1.5 sm:px-3 sm:py-2">
             
             {/* Collapsed Engine Selector Dropdown */}
@@ -84,23 +86,24 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 ref={buttonRef}
                 type="button"
                 onClick={() => setIsDropdownOpen((prev) => !prev)}
-                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-2xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-white/5 transition-all outline-none"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-white/5 transition-all outline-none select-none shrink-0"
                 aria-expanded={isDropdownOpen}
               >
                 <CurrentIcon className="w-4 h-4 text-blue-500 shrink-0" />
-                <span className="truncate max-w-[60px] sm:max-w-none">{currentEngine.name}</span>
+                <span className="whitespace-nowrap">{currentEngine.name}</span>
                 <ChevronDown
-                  className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                  className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${
                     isDropdownOpen ? 'rotate-180 text-blue-500' : ''
                   }`}
                 />
               </button>
 
-              {/* Popover Dropdown Menu */}
+              {/* Popover Dropdown Menu - High z-index & Opaque backdrop to prevent any bleed-through or clipping */}
               {isDropdownOpen && (
                 <div
                   ref={dropdownRef}
-                  className="absolute top-full left-0 mt-2 w-44 glass-panel bg-white/95 dark:bg-cosmos-900/95 rounded-2xl shadow-xl border border-slate-200/80 dark:border-white/10 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150"
+                  className="absolute top-full left-0 mt-2.5 w-48 bg-white/98 dark:bg-[#101524]/98 backdrop-blur-2xl rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.25)] dark:shadow-[0_25px_60px_rgba(0,0,0,0.8)] border border-slate-200/90 dark:border-white/15 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150"
+                  style={{ minWidth: '170px' }}
                 >
                   {ENGINES.map((item) => {
                     const isSelected = item.id === engine;
@@ -114,15 +117,15 @@ const SearchBar: React.FC<SearchBarProps> = ({
                           setIsDropdownOpen(false);
                           inputRef.current?.focus();
                         }}
-                        className={`w-full text-left px-3.5 py-2.5 text-xs font-medium flex items-center justify-between transition-colors ${
+                        className={`w-full text-left px-3.5 py-2.5 text-xs sm:text-sm font-medium flex items-center justify-between transition-colors ${
                           isSelected
                             ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-semibold'
-                            : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100/60 dark:hover:bg-white/5'
+                            : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100/70 dark:hover:bg-white/5'
                         }`}
                       >
                         <div className="flex items-center gap-2.5">
                           <ItemIcon className={`w-4 h-4 ${isSelected ? 'text-blue-500' : 'text-slate-400'}`} />
-                          <span>{item.name}</span>
+                          <span className="whitespace-nowrap">{item.name}</span>
                         </div>
                         {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
                       </button>
@@ -133,7 +136,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             </div>
 
             {/* Vertical Divider */}
-            <div className="h-5 w-[1px] bg-slate-200 dark:bg-white/10 mx-1 sm:mx-2 shrink-0" />
+            <div className="h-5 w-[1px] bg-slate-200 dark:bg-white/10 mx-1.5 sm:mx-2.5 shrink-0" />
 
             {/* Search Input Field */}
             <div className="flex-1 flex items-center min-w-0 relative px-1">
