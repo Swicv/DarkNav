@@ -1,5 +1,28 @@
 import { Env, corsHeaders } from './_utils';
 
+function isPrivateOrLocalHost(hostname: string): boolean {
+  if (!hostname) return false;
+  const host = hostname.toLowerCase();
+  if (host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '0.0.0.0') return true;
+  if (!host.includes('.')) return true;
+  if (
+    host.endsWith('.local') ||
+    host.endsWith('.lan') ||
+    host.endsWith('.internal') ||
+    host.endsWith('.home') ||
+    host.endsWith('.corp') ||
+    host.endsWith('.intranet') ||
+    host.endsWith('.localhost')
+  ) {
+    return true;
+  }
+  if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+  if (/^172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+  if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+  if (/^169\.254\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+  return false;
+}
+
 export const onRequestOptions = async ({ env }: { env: Env }) => {
   return new Response(null, {
     status: 204,
@@ -11,8 +34,16 @@ export const onRequestGet = async ({ request, env }: { request: Request; env: En
   const url = new URL(request.url);
   const domain = url.searchParams.get('domain')?.trim() || '';
 
-  if (!domain || domain.length > 255 || !domain.includes('.')) {
+  if (!domain || domain.length > 255) {
     return new Response('Invalid domain', { status: 400, headers: corsHeaders(env) });
+  }
+
+  // Fast rejection for private / LAN hostnames (Cloudflare Edge cannot reach private IPs)
+  if (isPrivateOrLocalHost(domain)) {
+    return new Response('Private domain not accessible via edge proxy', {
+      status: 404,
+      headers: corsHeaders(env)
+    });
   }
 
   // 1. Try Google S2 (Cloudflare Edge can access Google without any GFW restriction)

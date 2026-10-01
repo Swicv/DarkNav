@@ -55,6 +55,21 @@ export const isSafeHttpUrl = (value: unknown): boolean => {
   }
 };
 
+export const isSafeIconUrl = (value: unknown): boolean => {
+  if (typeof value !== 'string') return false;
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  if (trimmed.startsWith('/') || trimmed.startsWith('./') || trimmed.startsWith('data:image/')) {
+    return true;
+  }
+  try {
+    const url = new URL(trimmed);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
 export const cleanText = (value: unknown, maxLength: number): string => (
   typeof value === 'string' ? value.trim().slice(0, maxLength) : ''
 );
@@ -81,7 +96,7 @@ export const normalizeData = (data: any) => {
             id: cleanText(item.id, 80) || `link-${categoryIndex}-${itemIndex}-${Date.now()}`,
             title: cleanText(item.title, 120) || '无标题',
             url,
-            ...(icon && isSafeHttpUrl(icon) ? { icon } : {}),
+            ...(icon && isSafeIconUrl(icon) ? { icon } : {}),
             ...(cleanText(item.description, 200) ? { description: cleanText(item.description, 200) } : {})
           };
         })

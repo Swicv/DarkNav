@@ -51,6 +51,21 @@ const isSafeHttpUrl = (value) => {
   }
 };
 
+const isSafeIconUrl = (value) => {
+  if (typeof value !== 'string') return false;
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  if (trimmed.startsWith('/') || trimmed.startsWith('./') || trimmed.startsWith('data:image/')) {
+    return true;
+  }
+  try {
+    const url = new URL(trimmed);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
 const cleanText = (value, maxLength) => (
   typeof value === 'string' ? value.trim().slice(0, maxLength) : ''
 );
@@ -77,7 +92,7 @@ const normalizeData = (data) => {
             id: cleanText(item.id, 80) || `link-${categoryIndex}-${itemIndex}-${Date.now()}`,
             title: cleanText(item.title, 120) || '无标题',
             url,
-            ...(icon && isSafeHttpUrl(icon) ? { icon } : {}),
+            ...(icon && isSafeIconUrl(icon) ? { icon } : {}),
             ...(cleanText(item.description, 200) ? { description: cleanText(item.description, 200) } : {})
           };
         })
@@ -308,14 +323,42 @@ app.get('/api/weather', async (req, res) => {
       aqi: 45
     });
   }
+function isPrivateOrLocalHost(hostname) {
+  if (!hostname) return false;
+  const host = hostname.toLowerCase();
+  if (host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '0.0.0.0') return true;
+  if (!host.includes('.')) return true;
+  if (
+    host.endsWith('.local') ||
+    host.endsWith('.lan') ||
+    host.endsWith('.internal') ||
+    host.endsWith('.home') ||
+    host.endsWith('.corp') ||
+    host.endsWith('.intranet') ||
+    host.endsWith('.localhost')
+  ) {
+    return true;
+  }
+  if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+  if (/^172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+  if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+  if (/^169\.254\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+  return false;
+}
+
 // API: Favicon Proxy & Cache (7-day caching)
 const faviconCache = new Map();
 const FAVICON_CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
 
 app.get('/api/favicon', async (req, res) => {
   const domain = typeof req.query.domain === 'string' ? req.query.domain.trim() : '';
-  if (!domain || domain.length > 255 || !domain.includes('.')) {
+  if (!domain || domain.length > 255) {
     return res.status(400).send('Invalid domain');
+  }
+
+  // Fast rejection for private / LAN hostnames
+  if (isPrivateOrLocalHost(domain)) {
+    return res.status(404).send('Private domain not accessible via edge proxy');
   }
 
   const cached = faviconCache.get(domain);

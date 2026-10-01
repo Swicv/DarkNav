@@ -19,6 +19,20 @@ const isSafeHttpUrl = (value: string): boolean => {
   }
 };
 
+const isSafeIconUrl = (value: string): boolean => {
+  const trimmed = value.trim();
+  if (!trimmed) return true;
+  if (trimmed.startsWith('/') || trimmed.startsWith('./') || trimmed.startsWith('data:image/')) {
+    return true;
+  }
+  try {
+    const url = new URL(trimmed);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
 const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, onSave, onDelete, initialData }) => {
   const [formData, setFormData] = useState<LinkItem>({
     id: '',
@@ -55,8 +69,8 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, onSave, onDelete
       alert('链接 URL 必须以 http:// 或 https:// 开头');
       return;
     }
-    if (finalData.icon && !isSafeHttpUrl(finalData.icon)) {
-      alert('图标 URL 必须以 http:// 或 https:// 开头（或留空自动获取）');
+    if (finalData.icon && !isSafeIconUrl(finalData.icon)) {
+      alert('图标 URL 必须以 http://、https:// 或 / 开头（或留空自动获取）');
       return;
     }
 
