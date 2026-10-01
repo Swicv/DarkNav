@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 
 interface FaviconProps {
   url?: string;
@@ -24,7 +24,7 @@ function hashString(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0; // Convert to 32bit integer
+    hash |= 0;
   }
   return Math.abs(hash);
 }
@@ -47,31 +47,26 @@ export const Favicon: React.FC<FaviconProps> = ({
   size = 'md',
 }) => {
   const hostname = useMemo(() => extractHostname(url), [url]);
+  const timerRef = useRef<number | null>(null);
 
-  // Generate fallback sources queue
+  // Generate fallback sources queue: Prioritize same-origin cached Edge Gateway
   const sources = useMemo(() => {
     const list: string[] = [];
-    // 1. Explicit custom icon
+    
+    // 1. Explicit custom icon (if user entered one)
     if (icon && (icon.startsWith('http://') || icon.startsWith('https://') || icon.startsWith('data:'))) {
       list.push(icon);
     }
+    
     if (hostname) {
-      // 2. Google S2 High Resolution Favicon Service (Global CDN, 128px Retina)
-      const googleS2 = `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`;
-      if (!list.includes(googleS2)) list.push(googleS2);
+      // 2. High-speed Edge Gateway with 7-day Cache (No GFW timeout, same-origin HTTP/2)
+      list.push(`/api/favicon?domain=${encodeURIComponent(hostname)}`);
 
-      // 3. DuckDuckGo Favicon Service
-      const ddg = `https://icons.duckduckgo.com/ip3/${hostname}.ico`;
-      if (!list.includes(ddg)) list.push(ddg);
-
-      // 4. Target site direct favicon
+      // 3. Direct origin favicon
       try {
         const origin = new URL(url).origin;
-        const directFavicon = `${origin}/favicon.ico`;
-        if (!list.includes(directFavicon)) list.push(directFavicon);
-      } catch {
-        // ignore invalid url
-      }
+        list.push(`${origin}/favicon.ico`);
+      } catch {}
     }
     return list;
   }, [url, icon, hostname]);
@@ -79,13 +74,50 @@ export const Favicon: React.FC<FaviconProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [hasError, setHasError] = useState(false);
 
-  // Reset error & index state whenever url or icon changes
+  // Reset state on url or sources change
   useEffect(() => {
     setCurrentIndex(0);
     setHasError(sources.length === 0);
   }, [sources]);
 
+  // Fast timeout watchdog: If an icon source takes > 2000ms, abort to next source or Monogram
+  useEffect(() => {
+    if (hasError || sources.length === 0 || currentIndex >= sources.length) {
+      return;
+    }
+
+    if (timerRef.current) {
+      window.clearTimeout(timerRef.current);
+    }
+
+    timerRef.current = window.setTimeout(() => {
+      // Advance to next source or fallback
+      if (currentIndex + 1 < sources.length) {
+        setCurrentIndex((prev) => prev + 1);
+      } else {
+        setHasError(true);
+      }
+    }, 2000);
+
+    return () => {
+      if (timerRef.current) {
+        window.clearTimeout(timerRef.current);
+      }
+    };
+  }, [currentIndex, sources, hasError]);
+
+  const handleImageLoad = () => {
+    if (timerRef.current) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
   const handleImageError = () => {
+    if (timerRef.current) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
     if (currentIndex + 1 < sources.length) {
       setCurrentIndex((prev) => prev + 1);
     } else {
@@ -97,7 +129,6 @@ export const Favicon: React.FC<FaviconProps> = ({
   const hashKey = hostname || title || 'nav';
   const palette = GRADIENT_PALETTES[hashString(hashKey) % GRADIENT_PALETTES.length];
   
-  // Pick monogram character: prefer uppercase English letter or first Chinese character
   const displayChar = useMemo(() => {
     const cleanTitle = (title || hostname || '?').trim();
     if (!cleanTitle) return '?';
@@ -128,20 +159,21 @@ export const Favicon: React.FC<FaviconProps> = ({
           src={sources[currentIndex]}
           alt={title}
           loading="lazy"
+          decoding="async"
           className={`${imgSizeClasses} object-contain transition-transform duration-300 group-hover:scale-110`}
+          onLoad={handleImageLoad}
           onError={handleImageError}
         />
       </div>
     );
   }
 
-  // Award-winning Aesthetic Monogram Fallback
+  // Award-winning Aesthetic Monogram Fallback (0ms, 0 bytes network)
   return (
     <div
       className={`relative flex items-center justify-center shrink-0 font-bold bg-gradient-to-br ${palette.bg} text-white ring-1 ring-inset ${palette.ring} shadow-lg ${palette.glow} transition-all duration-300 group-hover:scale-105 group-hover:rotate-1 ${sizeClasses} ${className}`}
       title={title}
     >
-      {/* Specular glass highlight reflection */}
       <span className="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-black/10 pointer-events-none rounded-[inherit]" />
       <span className="relative z-10 font-semibold tracking-wide drop-shadow-sm select-none">
         {displayChar}

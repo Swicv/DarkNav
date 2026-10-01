@@ -308,6 +308,60 @@ app.get('/api/weather', async (req, res) => {
       aqi: 45
     });
   }
+// API: Favicon Proxy & Cache (7-day caching)
+const faviconCache = new Map();
+const FAVICON_CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
+
+app.get('/api/favicon', async (req, res) => {
+  const domain = typeof req.query.domain === 'string' ? req.query.domain.trim() : '';
+  if (!domain || domain.length > 255 || !domain.includes('.')) {
+    return res.status(400).send('Invalid domain');
+  }
+
+  const cached = faviconCache.get(domain);
+  const now = Date.now();
+  if (cached && now - cached.timestamp < FAVICON_CACHE_TTL) {
+    res.set({
+      'Content-Type': cached.contentType,
+      'Cache-Control': 'public, max-age=604800, immutable'
+    });
+    return res.send(cached.buffer);
+  }
+
+  try {
+    const googleRes = await fetch(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`, {
+      signal: AbortSignal.timeout(2500)
+    });
+    if (googleRes.ok) {
+      const buffer = Buffer.from(await googleRes.arrayBuffer());
+      const contentType = googleRes.headers.get('content-type') || 'image/png';
+      faviconCache.set(domain, { timestamp: now, contentType, buffer });
+      res.set({
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=604800, immutable'
+      });
+      return res.send(buffer);
+    }
+  } catch (e) {}
+
+  try {
+    const ddgRes = await fetch(`https://icons.duckduckgo.com/ip3/${encodeURIComponent(domain)}.ico`, {
+      signal: AbortSignal.timeout(2000)
+    });
+    if (ddgRes.ok) {
+      const buffer = Buffer.from(await ddgRes.arrayBuffer());
+      const contentType = ddgRes.headers.get('content-type') || 'image/x-icon';
+      faviconCache.set(domain, { timestamp: now, contentType, buffer });
+      res.set({
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=604800, immutable'
+      });
+      return res.send(buffer);
+    }
+  } catch (e) {}
+
+  res.set('Cache-Control', 'public, max-age=86400');
+  res.status(404).send('Not found');
 });
 
 // API: Get Data

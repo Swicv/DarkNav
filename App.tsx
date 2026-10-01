@@ -134,8 +134,20 @@ export interface WeatherData {
 }
 
 const App: React.FC = () => {
-  const [data, setData] = useState<AppData>(INITIAL_DATA);
-  const [dataLoading, setDataLoading] = useState(true);
+  // SWR Instant Local Cache: Zero-millisecond first paint without waiting for network
+  const [data, setData] = useState<AppData>(() => {
+    try {
+      const cached = window.localStorage.getItem('cosmonav_cached_data');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && Array.isArray(parsed.categories)) return parsed;
+      }
+    } catch {}
+    return INITIAL_DATA;
+  });
+  const [dataLoading, setDataLoading] = useState(() => {
+    return !window.localStorage.getItem('cosmonav_cached_data');
+  });
   
   const [darkMode, setDarkMode] = useStickyState(false, 'darknav-theme', 'flatnav-theme');
   const [activeCategory, setActiveCategory] = useState<string>('');
@@ -146,8 +158,16 @@ const App: React.FC = () => {
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [showChangePwdModal, setShowChangePwdModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [weatherLoading, setWeatherLoading] = useState(true);
+  const [weather, setWeather] = useState<WeatherData | null>(() => {
+    try {
+      const cached = window.localStorage.getItem('cosmonav_cached_weather');
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return null;
+  });
+  const [weatherLoading, setWeatherLoading] = useState(() => {
+    return !window.localStorage.getItem('cosmonav_cached_weather');
+  });
   
   // Search State
   const [searchEngine, setSearchEngine] = useStickyState<SearchEngine>('local', 'darknav-search-engine', 'flatnav-search-engine');
@@ -173,14 +193,22 @@ const App: React.FC = () => {
     }
   }, [darkMode]);
 
-  // Spotlight mouse tracking listener
+  // High-performance Spotlight mouse tracking (throttled by requestAnimationFrame)
   useEffect(() => {
+    let rafId: number | null = null;
     const handleMouseMove = (e: MouseEvent) => {
-      document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
-      document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+        document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+        rafId = null;
+      });
     };
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   // Global Keyboard shortcuts (/ for search, D for theme toggle)
@@ -208,26 +236,28 @@ const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [setDarkMode]);
 
-  // Fetch initial data
+  // Fetch initial data with silent background SWR update
   const fetchData = async () => {
-    setDataLoading(true);
     try {
       const res = await fetch('/api/data');
       if (res.ok) {
         const serverData = await res.json();
         if (serverData && Array.isArray(serverData.categories)) {
           setData(serverData);
+          try {
+            window.localStorage.setItem('cosmonav_cached_data', JSON.stringify(serverData));
+          } catch {}
           if (serverData.categories.length > 0 && !activeCategory) {
             setActiveCategory(serverData.categories[0].id);
           }
-        } else {
+        } else if (!data || data.categories.length === 0) {
           setData(INITIAL_DATA);
         }
-      } else {
-        setData(INITIAL_DATA);
       }
     } catch (error) {
-      setData(INITIAL_DATA);
+      if (!data || data.categories.length === 0) {
+        setData(INITIAL_DATA);
+      }
     } finally {
       setDataLoading(false);
     }
@@ -321,6 +351,9 @@ const App: React.FC = () => {
           if (weatherJson && typeof weatherJson.temp === 'number') {
             if (isMounted) {
               setWeather(weatherJson);
+              try {
+                window.localStorage.setItem('cosmonav_cached_weather', JSON.stringify(weatherJson));
+              } catch {}
               setWeatherLoading(false);
             }
             return;

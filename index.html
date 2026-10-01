@@ -8,169 +8,18 @@
     <!-- Favicon: High-tech compass in vibrant celestial gradient -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%236366f1'/%3E%3Cstop offset='100%25' stop-color='%2306b6d4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='%23090d16'/%3E%3Ccircle cx='16' cy='16' r='10' stroke='url(%23g)' stroke-width='2' stroke-dasharray='2 2'/%3E%3Cpolygon points='16,8 20,16 16,14' fill='%2338bdf8'/%3E%3Cpolygon points='16,24 12,16 16,18' fill='%23818cf8'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%23ffffff'/%3E%3C/svg%3E">
     
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- DNS prefetch for performance -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
+    
+    <!-- Asynchronous non-blocking webfonts: page paints immediately with zero render-blocking delay -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Plus Jakarta Sans', 'Noto Sans SC', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-              mono: ['JetBrains Mono', 'Menlo', 'Monaco', 'monospace'],
-            },
-            colors: {
-              cosmos: {
-                950: '#070a12',
-                900: '#0b0f19',
-                850: '#101524',
-                800: '#161d31',
-                700: '#222b45',
-                600: '#334166',
-              },
-              aurora: {
-                blue: '#3b82f6',
-                cyan: '#06b6d4',
-                purple: '#8b5cf6',
-                pink: '#ec4899',
-                amber: '#f59e0b',
-                emerald: '#10b981',
-              }
-            },
-            boxShadow: {
-              'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.08)',
-              'glass-dark': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-              'glow-sm': '0 0 15px rgba(59, 130, 246, 0.25)',
-              'glow-md': '0 0 30px rgba(59, 130, 246, 0.3)',
-              'inner-highlight': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.12)',
-            },
-            animation: {
-              'pulse-subtle': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              'shimmer': 'shimmer 2.5s infinite',
-              'float': 'float 6s ease-in-out infinite',
-            },
-            keyframes: {
-              shimmer: {
-                '0%': { transform: 'translateX(-100%)' },
-                '100%': { transform: 'translateX(100%)' },
-              },
-              float: {
-                '0%, 100%': { transform: 'translateY(0px)' },
-                '50%': { transform: 'translateY(-6px)' },
-              }
-            }
-          },
-        },
-      }
-    </script>
-    <style>
-      /* 隐藏滚动条但保留平滑滚动 */
-      .no-scrollbar::-webkit-scrollbar { display: none; }
-      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      
-      /* 全局平滑渲染与抗锯齿 */
-      html {
-        font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-        text-rendering: optimizeLegibility;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
-      
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-      
-      html, body {
-        overflow-x: hidden;
-        width: 100%;
-        max-width: 100vw;
-        position: relative;
-      }
-
-      /* 针对数字展示等宽抗抖动 */
-      .tabular-nums {
-        font-variant-numeric: tabular-nums;
-      }
-
-      /* 现代高定磨砂晶体表面 */
-      .glass-panel {
-        background: rgba(255, 255, 255, 0.72);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.6);
-      }
-      .dark .glass-panel {
-        background: rgba(16, 21, 36, 0.7);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-      }
-
-      /* 探照灯聚光卡片与微米级光晕 (Spotlight Card) */
-      .spotlight-card {
-        position: relative;
-        overflow: hidden;
-      }
-      .spotlight-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: radial-gradient(
-          600px circle at var(--mouse-x, -1000px) var(--mouse-y, -1000px),
-          rgba(59, 130, 246, 0.08),
-          transparent 40%
-        );
-        pointer-events: none;
-        transition: opacity 0.5s ease;
-        opacity: 0;
-        z-index: 1;
-      }
-      .dark .spotlight-card::before {
-        background: radial-gradient(
-          600px circle at var(--mouse-x, -1000px) var(--mouse-y, -1000px),
-          rgba(56, 189, 248, 0.12),
-          transparent 40%
-        );
-      }
-      .spotlight-card:hover::before {
-        opacity: 1;
-      }
-
-      /* 极致顺滑的贝塞尔物理阻尼 */
-      .transition-spring {
-        transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-      }
-
-      /* 精致极细微滚动条 (当需要显示时) */
-      ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: rgba(156, 163, 175, 0.3);
-        border-radius: 9999px;
-      }
-      .dark ::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.15);
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: rgba(156, 163, 175, 0.5);
-      }
-      .dark ::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.3);
-      }
-    </style>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+    </noscript>
   </head>
   <body class="bg-[#f8fafc] text-slate-800 dark:bg-[#070a12] dark:text-slate-100 selection:bg-blue-500 selection:text-white transition-colors duration-500 min-h-screen">
     <div id="root"></div>
