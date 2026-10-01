@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   ChevronRight, User, Plus, Edit2, Compass, Moon, Sun, Trash2, 
   Menu, X, Download, Upload, Loader2, ArrowUp, ArrowDown, Lock,
-  ExternalLink, Copy, Check, Sparkles, Filter, ShieldCheck
+  ExternalLink, Copy, Check, Sparkles, ShieldCheck
 } from 'lucide-react';
 import { INITIAL_DATA, ICON_MAP } from './constants';
 import { AppData, LinkItem, Category, SearchEngine } from './types';
@@ -837,34 +837,7 @@ const App: React.FC = () => {
             />
           </div>
 
-          {/* Quick Category Chips Strip */}
-          {data.categories.length > 0 && (
-            <div className="max-w-[1600px] mx-auto mb-8 flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1 shrink-0 mr-1">
-                <Filter className="w-3 h-3" />
-                <span>快速索引:</span>
-              </span>
-              {data.categories.map((cat) => {
-                const Icon = ICON_MAP[cat.iconName] || ICON_MAP['LayoutGrid'];
-                const isActive = activeCategory === cat.id;
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => scrollToCategory(cat.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium shrink-0 transition-all duration-200 border ${
-                      isActive
-                        ? 'bg-blue-600 text-white border-blue-500 shadow-sm shadow-blue-500/25 scale-105'
-                        : 'bg-white/60 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 border-slate-200/60 dark:border-white/10 hover:border-blue-400 dark:hover:border-blue-500/40 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                    <span>{cat.title}</span>
-                    <span className="text-[10px] opacity-60">({cat.items.length})</span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+
 
           {/* Empty search / loading state */}
           {displayCategories.length === 0 && (
