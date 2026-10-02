@@ -80,7 +80,7 @@ const WeatherWidget: React.FC<WeatherWidgetProps> = ({ data, loading }) => {
           <span className="text-xl lg:text-2xl font-light text-slate-400 dark:text-slate-500 ml-0.5">°C</span>
         </div>
         
-        <div className="p-2 rounded-2xl bg-white/60 dark:bg-white/5 backdrop-blur-md border border-slate-200/50 dark:border-white/10 shadow-sm transition-transform duration-300 group-hover:scale-110">
+        <div className="p-2 rounded-2xl bg-white/70 dark:bg-white/10 border border-slate-200/50 dark:border-white/10 shadow-sm transition-transform duration-200 group-hover:scale-110">
           <WeatherIcon className={`w-7 h-7 lg:w-8 lg:h-8 ${weatherInfo.color}`} />
         </div>
       </div>

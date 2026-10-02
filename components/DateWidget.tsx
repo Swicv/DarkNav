@@ -6,7 +6,8 @@ const DateWidget: React.FC = () => {
   const [date, setDate] = useState(new Date());
 
   useEffect(() => {
-    const timer = setInterval(() => setDate(new Date()), 1000);
+    // Calendar only needs to update once per minute
+    const timer = setInterval(() => setDate(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 

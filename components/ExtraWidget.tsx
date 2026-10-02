@@ -49,7 +49,7 @@ const ExtraWidget: React.FC<ExtraWidgetProps> = ({ data, loading }) => {
           </span>
         </div>
         <div className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${aqiConfig.bg}`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${aqiConfig.glow} animate-pulse`} />
+          <span className={`w-1.5 h-1.5 rounded-full ${aqiConfig.glow} shadow-[0_0_6px_currentColor]`} />
           <span>{aqiConfig.label}</span>
         </div>
       </div>

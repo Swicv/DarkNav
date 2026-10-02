@@ -193,24 +193,6 @@ const App: React.FC = () => {
     }
   }, [darkMode]);
 
-  // High-performance Spotlight mouse tracking (throttled by requestAnimationFrame)
-  useEffect(() => {
-    let rafId: number | null = null;
-    const handleMouseMove = (e: MouseEvent) => {
-      if (rafId) return;
-      rafId = requestAnimationFrame(() => {
-        document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
-        document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
-        rafId = null;
-      });
-    };
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      if (rafId) cancelAnimationFrame(rafId);
-    };
-  }, []);
-
   // Global Keyboard shortcuts (/ for search, D for theme toggle)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -649,11 +631,11 @@ const App: React.FC = () => {
   return (
     <div className={`flex h-screen w-full overflow-hidden font-sans transition-colors duration-500 relative ${darkMode ? 'dark' : ''}`}>
       
-      {/* Background Ambient Aurora Mesh */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute -top-[15%] -left-[10%] w-[55vw] h-[55vw] rounded-full bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-transparent blur-[140px] dark:from-indigo-600/15 dark:via-purple-600/10 animate-float" />
-        <div className="absolute top-[35%] -right-[15%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-bl from-cyan-500/10 via-sky-500/10 to-transparent blur-[140px] dark:from-cyan-500/10 dark:via-blue-600/10 animate-float" style={{ animationDelay: '-3s' }} />
-        <div className="absolute -bottom-[20%] left-[25%] w-[45vw] h-[45vw] rounded-full bg-gradient-to-tr from-rose-500/5 via-amber-500/5 to-transparent blur-[140px] dark:from-rose-500/5 dark:via-cyan-500/5" />
+      {/* Background Ambient Aurora Mesh (Static hardware-accelerated texture, 0% GPU load) */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 transform-gpu">
+        <div className="absolute -top-[15%] -left-[10%] w-[55vw] h-[55vw] rounded-full bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-transparent blur-[90px] dark:from-indigo-600/15 dark:via-purple-600/10" />
+        <div className="absolute top-[35%] -right-[15%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-bl from-cyan-500/10 via-sky-500/10 to-transparent blur-[90px] dark:from-cyan-500/10 dark:via-blue-600/10" />
+        <div className="absolute -bottom-[20%] left-[25%] w-[45vw] h-[45vw] rounded-full bg-gradient-to-tr from-rose-500/5 via-amber-500/5 to-transparent blur-[90px] dark:from-rose-500/5 dark:via-cyan-500/5" />
       </div>
 
       <input type="file" ref={fileInputRef} onChange={handleImportData} className="hidden" accept=".json,.html" />
@@ -682,7 +664,7 @@ const App: React.FC = () => {
                     Cosmo's Nav
                   </h1>
                   {isAdmin && (
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-400/30 animate-pulse" title="管理中" />
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-400/30 shadow-[0_0_8px_rgba(16,185,129,0.8)]" title="管理中" />
                   )}
                 </div>
                 <p className="text-[10px] font-mono font-bold text-slate-400 dark:text-slate-500 tracking-[0.2em] uppercase">
@@ -933,7 +915,7 @@ const App: React.FC = () => {
                   </div>
 
                   {/* Bookmark Cards Bento Grid */}
-                  <div className="glass-panel bg-slate-50/50 dark:bg-cosmos-950/30 rounded-b-3xl p-4 sm:p-6 border border-t-0 border-slate-200/70 dark:border-white/[0.08] shadow-sm transition-colors">
+                  <div className="bg-slate-50/60 dark:bg-cosmos-950/40 rounded-b-3xl p-4 sm:p-6 border border-t-0 border-slate-200/70 dark:border-white/[0.08] shadow-sm transition-colors">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3.5 sm:gap-4">
                       {category.items.map((link) => {
                         const safeUrl = getSafeHttpUrl(link.url);
@@ -943,7 +925,7 @@ const App: React.FC = () => {
                         return (
                           <div 
                             key={link.id} 
-                            className="spotlight-card group relative flex flex-col justify-between p-3.5 sm:p-4 rounded-2xl bg-white/80 dark:bg-white/[0.03] backdrop-blur-xl border border-slate-200/70 dark:border-white/[0.08] shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.25)] hover:border-blue-500/40 dark:hover:border-blue-400/40 hover:-translate-y-1 hover:shadow-xl active:scale-[0.98] transition-all duration-300"
+                            className="spotlight-card group relative flex flex-col justify-between p-3.5 sm:p-4 rounded-2xl bg-white/95 dark:bg-[#0e1320] border border-slate-200/80 dark:border-white/[0.08] shadow-[0_2px_12px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] hover:border-blue-500/40 dark:hover:border-blue-400/40 hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.99] transition-all duration-200"
                           >
                             <a
                               href={safeUrl || undefined}

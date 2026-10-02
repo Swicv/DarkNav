@@ -4,8 +4,7 @@ const ClockWidget: React.FC = () => {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
-    // 60fps or 1s interval. 200ms gives crisp second hand feel
-    const timer = setInterval(() => setTime(new Date()), 500);
+    const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -27,8 +26,7 @@ const ClockWidget: React.FC = () => {
       <div className="flex items-center justify-between z-10">
         <div className="flex items-center gap-1.5">
           <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></span>
           </span>
           <span className="text-[10px] font-mono tracking-[0.2em] uppercase font-bold text-slate-400 dark:text-slate-500">
             CHRONO

@@ -272,7 +272,7 @@ export const Favicon: React.FC<FaviconProps> = ({
   if (!hasError && sources.length > 0 && currentIndex < sources.length) {
     return (
       <div
-        className={`relative flex items-center justify-center shrink-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200/70 dark:border-white/10 shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:shadow-md ${sizeClasses} ${className}`}
+        className={`relative flex items-center justify-center shrink-0 bg-slate-50/90 dark:bg-slate-800/90 border border-slate-200/70 dark:border-white/10 shadow-sm transition-all duration-200 group-hover:scale-105 group-hover:shadow-md ${sizeClasses} ${className}`}
       >
         <img
           key={sources[currentIndex]}

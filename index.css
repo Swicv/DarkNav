@@ -34,45 +34,43 @@ html, body {
 
 /* 现代高定磨砂晶体表面 */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.6);
 }
 .dark .glass-panel {
-  background: rgba(16, 21, 36, 0.7);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: rgba(16, 21, 36, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* 探照灯聚光卡片与微米级光晕 (Spotlight Card) */
+/* 高性能硬件加速微光卡片 (Zero-CPU CSS Hover Glow) */
 .spotlight-card {
   position: relative;
   overflow: hidden;
+  transform: translateZ(0); /* 开启硬件合成层，避免重绘 */
 }
 .spotlight-card::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: radial-gradient(
-    600px circle at var(--mouse-x, -1000px) var(--mouse-y, -1000px),
-    rgba(59, 130, 246, 0.08),
-    transparent 40%
+    400px circle at 50% 0%,
+    rgba(59, 130, 246, 0.1),
+    transparent 70%
   );
   pointer-events: none;
-  transition: opacity 0.5s ease;
+  transition: opacity 0.3s ease;
   opacity: 0;
   z-index: 1;
 }
 .dark .spotlight-card::before {
   background: radial-gradient(
-    600px circle at var(--mouse-x, -1000px) var(--mouse-y, -1000px),
-    rgba(56, 189, 248, 0.12),
-    transparent 40%
+    400px circle at 50% 0%,
+    rgba(56, 189, 248, 0.15),
+    transparent 70%
   );
 }
 .spotlight-card:hover::before {
